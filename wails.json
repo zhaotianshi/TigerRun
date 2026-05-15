@@ -1,0 +1,13 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "老虎快跑",
+  "outputfilename": "老虎快跑",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "zhaotianshi",
+    "email": "44288913+zhaotianshi@users.noreply.github.com"
+  }
+}

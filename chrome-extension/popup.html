@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>老虎快跑代理</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="popup">
+    <header class="header">
+      <div class="mark"><img src="icons/icon32.png" alt=""></div>
+      <div>
+        <h1>老虎快跑</h1>
+        <p>Chrome 代理控制器</p>
+      </div>
+    </header>
+
+    <section class="status" id="statusBox">
+      <span class="dot" id="statusDot"></span>
+      <div>
+        <strong id="statusTitle">检查中</strong>
+        <p id="statusText">正在连接老虎快跑</p>
+      </div>
+    </section>
+
+    <section class="form">
+      <label>
+        <span>代理地址</span>
+        <input id="host" type="text" value="127.0.0.1" spellcheck="false">
+      </label>
+      <label>
+        <span>端口</span>
+        <input id="port" type="number" min="1" max="65535" value="8080">
+      </label>
+    </section>
+
+    <section class="actions">
+      <button class="primary" id="enableBtn">开启 Chrome 代理</button>
+      <button id="disableBtn">关闭</button>
+    </section>
+
+    <section class="tools">
+      <button id="certBtn">打开证书页</button>
+      <button id="copyBtn">复制代理地址</button>
+    </section>
+
+    <p class="note">
+      开启后只影响 Chrome。HTTPS 明文需要先在系统中信任老虎快跑根证书。
+    </p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
