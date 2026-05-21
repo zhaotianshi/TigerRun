@@ -1,8 +1,12 @@
 # Tiger Run
 
 [English](README.md) | [中文](README.zh-CN.md)
-
+软件截图
 Tiger Run is a Windows desktop HTTP/HTTPS debugging proxy. It exposes one proxy address for browsers, Windows apps, and iOS/Android Wi-Fi proxy settings, with a local Root CA, HTTPS CONNECT interception, request/response inspection, quick copy actions, and HAR export.
+<img width="1344" height="821" alt="image" src="https://github.com/user-attachments/assets/581bb855-1ed7-4aa3-8cdb-cbee72d8fb88" />
+chrome截图
+<img width="330" height="344" alt="image" src="https://github.com/user-attachments/assets/10b0f55f-b4bf-40f4-9f26-ba3123c3493e" />
+
 
 ## Features
 
