@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,7 +11,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
+	"unicode/utf16"
 
 	"github.com/zhaotianshi/TigerRun/internal/capture"
 	"github.com/zhaotianshi/TigerRun/internal/certstore"
@@ -48,6 +51,8 @@ type Status struct {
 	ProxyPort            int      `json:"proxyPort"`
 	LocalProxyAddress    string   `json:"localProxyAddress"`
 	LANProxyAddresses    []string `json:"lanProxyAddresses"`
+	MobileProxyHost      string   `json:"mobileProxyHost"`
+	MobileProxyPort      int      `json:"mobileProxyPort"`
 	CertificateURL       string   `json:"certificateUrl"`
 	CertificatePath      string   `json:"certificatePath"`
 	CertificateSubject   string   `json:"certificateSubject"`
@@ -67,7 +72,7 @@ func NewApp() *App {
 
 	store := capture.NewStore()
 	p := proxy.New(fmt.Sprintf("0.0.0.0:%d", defaultProxyPort), store, ca)
-	p.SetInterceptHTTPS(true)
+	p.SetInterceptHTTPS(false)
 	settings := loadSettings(dataDir)
 	if settings.UpstreamProxy != "" {
 		_ = p.SetUpstreamProxy(settings.UpstreamProxy)
@@ -104,10 +109,13 @@ func (a *App) GetStatus() Status {
 		lanProxyAddrs = append(lanProxyAddrs, fmt.Sprintf("%s:%d", addr, a.port))
 	}
 
+	mobileProxyHost := ""
 	certURL := ""
 	if len(lanAddrs) > 0 {
+		mobileProxyHost = lanAddrs[0]
 		certURL = fmt.Sprintf("http://%s:%d/cert", lanAddrs[0], a.port)
 	} else {
+		mobileProxyHost = "127.0.0.1"
 		certURL = fmt.Sprintf("http://127.0.0.1:%d/cert", a.port)
 	}
 
@@ -118,6 +126,8 @@ func (a *App) GetStatus() Status {
 		ProxyPort:            a.port,
 		LocalProxyAddress:    fmt.Sprintf("127.0.0.1:%d", a.port),
 		LANProxyAddresses:    lanProxyAddrs,
+		MobileProxyHost:      mobileProxyHost,
+		MobileProxyPort:      a.port,
 		CertificateURL:       certURL,
 		CertificatePath:      a.authority.CertPath(),
 		CertificateSubject:   a.authority.RootSubject(),
@@ -170,6 +180,32 @@ func (a *App) EnableSystemProxy() error {
 
 func (a *App) DisableSystemProxy() error {
 	return systemproxy.Disable()
+}
+
+func (a *App) AllowMobileFirewallAccess() error {
+	if runtime.GOOS != "windows" {
+		return errors.New("当前版本只支持在 Windows 上创建防火墙规则")
+	}
+	ruleName := fmt.Sprintf("TigerRun HTTP Proxy %d", a.port)
+	innerScript := fmt.Sprintf(`
+$ErrorActionPreference = 'Stop'
+$name = %s
+$port = %d
+$rule = Get-NetFirewallRule -DisplayName $name -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($null -eq $rule) {
+  New-NetFirewallRule -DisplayName $name -Direction Inbound -Action Allow -Protocol TCP -LocalPort $port -Profile Any | Out-Null
+} else {
+  Set-NetFirewallRule -DisplayName $name -Enabled True -Action Allow -Profile Any
+  Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rule | Set-NetFirewallPortFilter -Protocol TCP -LocalPort $port
+}
+`, powerShellString(ruleName), a.port)
+	outerScript := fmt.Sprintf(`$p = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-EncodedCommand','%s') -Verb RunAs -Wait -PassThru; if ($p.ExitCode -ne 0) { throw "Firewall rule command failed with exit code $($p.ExitCode)" }`, powerShellEncodedCommand(innerScript))
+	cmd := exec.Command("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", outerScript)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("创建 Windows 防火墙入站规则失败: %w: %s", err, strings.TrimSpace(string(output)))
+	}
+	return nil
 }
 
 func (a *App) InstallRootCertificate() error {
@@ -294,4 +330,18 @@ func isPortAvailable(port int) bool {
 	}
 	_ = listener.Close()
 	return true
+}
+
+func powerShellString(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
+}
+
+func powerShellEncodedCommand(script string) string {
+	wide := utf16.Encode([]rune(script))
+	raw := make([]byte, len(wide)*2)
+	for i, code := range wide {
+		raw[i*2] = byte(code)
+		raw[i*2+1] = byte(code >> 8)
+	}
+	return base64.StdEncoding.EncodeToString(raw)
 }

@@ -142,6 +142,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.isCertificateRequest(r) {
+		s.recordCertificateRequest(r)
 		s.serveCertificate(w, r)
 		return
 	}
@@ -658,6 +659,30 @@ func (s *Server) serveCertificate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/x-x509-ca-cert")
 	w.Header().Set("Content-Disposition", `attachment; filename="laohukuaipao-root-ca.pem"`)
 	_, _ = w.Write(s.authority.CertPEM())
+}
+
+func (s *Server) recordCertificateRequest(r *http.Request) {
+	contentType := "application/x-x509-ca-cert"
+	if r.URL.Path == "/" || strings.EqualFold(r.URL.Path, "/cert") {
+		contentType = "text/html; charset=utf-8"
+	}
+	s.store.Add(&capture.CapturedSession{
+		StartedAt:       time.Now(),
+		FinishedAt:      time.Now(),
+		Source:          remoteHost(r.RemoteAddr),
+		Method:          r.Method,
+		Scheme:          "http",
+		Host:            r.Host,
+		Path:            requestPath(r),
+		URL:             requestURL(r, "http"),
+		StatusCode:      http.StatusOK,
+		Status:          "200 OK",
+		Protocol:        r.Proto,
+		ContentType:     contentType,
+		RequestHeaders:  cloneHeader(r.Header),
+		ResponseHeaders: map[string][]string{"Content-Type": {contentType}},
+		Rule:            "internal certificate",
+	})
 }
 
 func (s *Server) recordProxyError(err error) {

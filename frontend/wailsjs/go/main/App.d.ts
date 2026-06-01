@@ -3,6 +3,8 @@
 import {capture} from '../models';
 import {main} from '../models';
 
+export function AllowMobileFirewallAccess():Promise<void>;
+
 export function ClearSessions():Promise<void>;
 
 export function ClearUpstreamProxy():Promise<void>;

@@ -47,7 +47,7 @@ func TestProxyCapturesPlainHTTP(t *testing.T) {
 }
 
 func TestProxyServesCertificate(t *testing.T) {
-	server, proxyURL, _ := startTestProxy(t, false)
+	server, proxyURL, store := startTestProxy(t, false)
 	defer stopTestProxy(t, server)
 
 	resp, err := http.Get("http://" + proxyURL.Host + "/cert.pem")
@@ -61,6 +61,14 @@ func TestProxyServesCertificate(t *testing.T) {
 	}
 	if got := resp.Header.Get("Content-Type"); got != "application/x-x509-ca-cert" {
 		t.Fatalf("unexpected content type: %s", got)
+	}
+
+	sessions := waitForSummaries(t, store, 1)
+	if len(sessions) != 1 {
+		t.Fatalf("expected certificate request to be captured, got %d sessions", len(sessions))
+	}
+	if sessions[0].Host != proxyURL.Host || sessions[0].Path != "/cert.pem" {
+		t.Fatalf("unexpected certificate session: %+v", sessions[0])
 	}
 }
 

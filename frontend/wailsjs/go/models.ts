@@ -200,6 +200,8 @@ export namespace main {
 	    proxyPort: number;
 	    localProxyAddress: string;
 	    lanProxyAddresses: string[];
+	    mobileProxyHost: string;
+	    mobileProxyPort: number;
 	    certificateUrl: string;
 	    certificatePath: string;
 	    certificateSubject: string;
@@ -221,6 +223,8 @@ export namespace main {
 	        this.proxyPort = source["proxyPort"];
 	        this.localProxyAddress = source["localProxyAddress"];
 	        this.lanProxyAddresses = source["lanProxyAddresses"];
+	        this.mobileProxyHost = source["mobileProxyHost"];
+	        this.mobileProxyPort = source["mobileProxyPort"];
 	        this.certificateUrl = source["certificateUrl"];
 	        this.certificatePath = source["certificatePath"];
 	        this.certificateSubject = source["certificateSubject"];
@@ -233,4 +237,3 @@ export namespace main {
 	}
 
 }
-

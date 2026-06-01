@@ -221,6 +221,51 @@ button {
   background: #ffffff;
 }
 
+.mobile-endpoint {
+  padding: 10px;
+  margin-bottom: 9px;
+  border: 1px solid #dde5ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.mobile-title,
+.mobile-field {
+  display: flex;
+  align-items: center;
+}
+
+.mobile-title {
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.mobile-title span {
+  color: #657184;
+  font-size: 12px;
+}
+
+.mobile-field {
+  gap: 8px;
+  min-height: 32px;
+  padding-left: 44px;
+}
+
+.mobile-field span {
+  flex: 0 0 44px;
+  color: #657184;
+  font-size: 12px;
+}
+
+.mobile-field strong {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
 .upstream-panel {
   padding: 10px;
   border: 1px solid #dde5ee;

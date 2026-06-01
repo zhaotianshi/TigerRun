@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import './App.css';
 import {
+  AllowMobileFirewallAccess,
   ClearSessions,
   CopyCertificateURL,
   CopyProxyAddress,
@@ -56,6 +57,8 @@ type Status = {
   proxyPort: number;
   localProxyAddress: string;
   lanProxyAddresses: string[];
+  mobileProxyHost: string;
+  mobileProxyPort: number;
   certificateUrl: string;
   certificatePath: string;
   certificateSubject: string;
@@ -130,10 +133,12 @@ declare global {
 const emptyStatus: Status = {
   version: '0.1.0',
   proxyRunning: false,
-  interceptHttps: true,
+  interceptHttps: false,
   proxyPort: 8080,
   localProxyAddress: '127.0.0.1:8080',
   lanProxyAddresses: [],
+  mobileProxyHost: '127.0.0.1',
+  mobileProxyPort: 8080,
   certificateUrl: 'http://127.0.0.1:8080/cert',
   certificatePath: '',
   certificateSubject: '',
@@ -333,6 +338,8 @@ function App() {
   }
 
   const primaryLanAddress = status.lanProxyAddresses[0] || '等待网卡地址';
+  const mobileProxyHost = status.mobileProxyHost || '等待网卡地址';
+  const mobileProxyPort = String(status.mobileProxyPort || status.proxyPort || 8080);
   const upstreamLabel = status.upstreamProxy || '直连';
 
   return (
@@ -357,7 +364,7 @@ function App() {
           <button
             className={status.interceptHttps ? 'button active' : 'button'}
             onClick={() => runAction(() => SetHTTPSIntercept(!status.interceptHttps), status.interceptHttps ? 'HTTPS 解密已关闭' : 'HTTPS 解密已开启')}
-            title="开启后会对 HTTPS CONNECT 执行本地 MITM 解密"
+            title="证书安装并完整信任后再开启 HTTPS 明文解密"
           >
             <ShieldCheck size={16}/>
             HTTPS
@@ -389,8 +396,18 @@ function App() {
         <aside className="sidebar">
           <div className="section-title">接入</div>
           <Endpoint icon={<Laptop size={18}/>} title="Windows / 浏览器" value={status.localProxyAddress} onCopy={() => runAction(CopyProxyAddress, '已复制本机代理地址')}/>
-          <Endpoint icon={<Smartphone size={18}/>} title="iOS / Android Wi-Fi" value={primaryLanAddress} onCopy={() => copyText(primaryLanAddress, '已复制局域网代理地址')}/>
+          <MobileEndpoint
+            host={mobileProxyHost}
+            port={mobileProxyPort}
+            onCopyHost={() => copyText(mobileProxyHost, '已复制手机代理服务器')}
+            onCopyPort={() => copyText(mobileProxyPort, '已复制手机代理端口')}
+          />
           <Endpoint icon={<Download size={18}/>} title="证书下载页" value={status.certificateUrl} onCopy={() => runAction(CopyCertificateURL, '已复制证书链接')}/>
+          <button className="side-button" onClick={() => runAction(AllowMobileFirewallAccess, '已申请放行 Windows 防火墙 8080 入站访问')}>
+            <ShieldCheck size={16}/>
+            放行手机访问
+          </button>
+          <p className="hint">iOS 的 Wi-Fi 代理里，服务器只填 IP，端口单独填 8080。先保持 HTTPS 关闭确认手机能上网，证书完整信任后再开启 HTTPS 抓明文。</p>
 
           <div className="section-title space">上游代理</div>
           <div className="upstream-panel">
@@ -619,6 +636,31 @@ function Endpoint({icon, title, value, onCopy}: {icon: ReactNode; title: string;
       <button className="mini-button" onClick={onCopy} title="复制">
         <Copy size={14}/>
       </button>
+    </div>
+  );
+}
+
+function MobileEndpoint({host, port, onCopyHost, onCopyPort}: {host: string; port: string; onCopyHost: () => void; onCopyPort: () => void}) {
+  return (
+    <div className="mobile-endpoint">
+      <div className="mobile-title">
+        <div className="endpoint-icon"><Smartphone size={18}/></div>
+        <span>iOS / Android Wi-Fi</span>
+      </div>
+      <div className="mobile-field">
+        <span>服务器</span>
+        <strong>{host}</strong>
+        <button className="mini-button" onClick={onCopyHost} title="复制服务器">
+          <Copy size={14}/>
+        </button>
+      </div>
+      <div className="mobile-field">
+        <span>端口</span>
+        <strong>{port}</strong>
+        <button className="mini-button" onClick={onCopyPort} title="复制端口">
+          <Copy size={14}/>
+        </button>
+      </div>
     </div>
   );
 }

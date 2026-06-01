@@ -51,7 +51,8 @@ Proxy port: 8080
 iOS / Android:
 
 ```text
-Wi-Fi proxy: <computer-lan-ip>:8080
+Wi-Fi proxy server: <computer-lan-ip>
+Wi-Fi proxy port: 8080
 Certificate URL: http://<computer-lan-ip>:8080/cert
 ```
 
@@ -77,12 +78,19 @@ Click “Install to Windows” in the desktop app. The certificate is installed 
 ### iOS
 
 1. Connect the iPhone and computer to the same Wi-Fi
-2. Set the iPhone Wi-Fi proxy to `<computer-ip>:8080`
-3. Open `http://<computer-ip>:8080/cert` in Safari
-4. Download the profile
-5. Go to `Settings` -> `General` -> `VPN & Device Management` and install it
-6. Go to `Settings` -> `General` -> `About` -> `Certificate Trust Settings`
-7. Enable full trust for `老虎快跑 Local Debugging Root CA`
+2. Set the iPhone Wi-Fi proxy to Manual
+3. Set `Server` to `<computer-ip>` only. Do not include `http://` or `:8080`
+4. Set `Port` to `8080`
+5. If Safari cannot open `http://<computer-ip>:8080/cert`, click `Allow mobile access` in the desktop app to allow inbound TCP 8080 through Windows Firewall
+6. Open `http://<computer-ip>:8080/cert` in Safari
+7. Download the profile
+8. Go to `Settings` -> `General` -> `VPN & Device Management` and install it
+9. Go to `Settings` -> `General` -> `About` -> `Certificate Trust Settings`
+10. Enable full trust for `老虎快跑 Local Debugging Root CA`
+
+When first connecting a phone, leave the desktop `HTTPS` button off and confirm that sites such as Baidu can still load. After the certificate is installed and fully trusted, enable `HTTPS` to capture decrypted traffic. Otherwise iOS will reject HTTPS sites because it does not trust the debugging certificate.
+
+After opening the certificate page, the desktop capture list should show one certificate request from the phone IP. If it does not, the iPhone has not reached the computer proxy yet; check that both devices are on the same Wi-Fi, the server/port fields are correct, the phone is not on a guest Wi-Fi, and AP isolation is disabled.
 
 ### Android
 
